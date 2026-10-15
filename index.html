@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#FFF8F2">
+  <title>知蟹 · 陪你理直气壮地休息</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="phone">
+
+    <!-- 1. 欢迎引导页 -->
+    <section class="page page-guide active" id="page-guide">
+      <div class="guide-tag">大学生休息陪伴 MVP</div>
+      <h1 class="brand">知蟹</h1>
+      <p class="slogan">陪你理直气壮地休息</p>
+      <div class="guide-crab" id="guideCrab"></div>
+      <div class="guide-card">
+        <p>学习间隙想休息，又怕被说“偷懒”？</p>
+        <p>知蟹以番茄蛋仔蟹为伙伴，用<strong>休息免责卡</strong>和<strong>蟹蟹养成</strong>，帮你告别“休息羞耻”。</p>
+      </div>
+      <button class="btn btn-primary btn-block" data-go="scene">开始休息</button>
+      <button class="link-btn" data-go="growth">我的番茄蛋仔蟹</button>
+    </section>
+
+    <!-- 2. 场景选择页（场景 + 时长 + 免责卡开关） -->
+    <section class="page" id="page-scene">
+      <header class="page-header">
+        <button class="icon-back" data-go="guide" aria-label="返回">‹</button>
+        <h2>选个休息场景</h2>
+      </header>
+
+      <h3 class="block-title">休息场景</h3>
+      <div class="scene-grid" id="sceneList"><!-- JS 渲染 --></div>
+
+      <h3 class="block-title">休息时长</h3>
+      <div class="duration-row" id="durationRow">
+        <button class="duration-btn" data-min="5">5 分钟</button>
+        <button class="duration-btn active" data-min="10">10 分钟</button>
+        <button class="duration-btn" data-min="15">15 分钟</button>
+      </div>
+
+      <div class="switch-row" id="cardSwitchRow">
+        <div class="switch-text">
+          <span class="switch-title">休息免责卡</span>
+          <span class="switch-desc">计时时悬浮治愈文案，结束后生成专属卡片</span>
+        </div>
+        <button class="switch on" id="cardSwitch" role="switch" aria-checked="true"><span></span></button>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="startBtn">开始休息</button>
+      <button class="link-btn" data-go="growth">查看蟹蟹成长主页</button>
+    </section>
+
+    <!-- 3. 计时器页（环形倒计时 + 悬浮文案） -->
+    <section class="page" id="page-timer">
+      <header class="page-header">
+        <h2 id="timerSceneTitle">休息中</h2>
+      </header>
+
+      <div class="timer-crab" id="timerCrab"></div>
+
+      <div class="ring">
+        <svg viewBox="0 0 240 240">
+          <circle class="ring-bg" cx="120" cy="120" r="104"></circle>
+          <circle class="ring-fg" id="ringFg" cx="120" cy="120" r="104"></circle>
+        </svg>
+        <div class="ring-center">
+          <div id="timeText">10:00</div>
+          <div class="ring-sub" id="ringSub">安心休息</div>
+        </div>
+      </div>
+
+      <div class="quote-pill" id="quotePill">
+        <span class="quote-badge">免责卡生效中</span>
+        <p id="quoteText"></p>
+      </div>
+
+      <button class="btn btn-ghost btn-block" id="extendBtn">再休息 5 分钟</button>
+      <button class="text-btn" id="earlyBtn">提前结束休息</button>
+    </section>
+
+    <!-- 4. 休息结束页（鼓励 + 成长提示 + 免责卡） -->
+    <section class="page" id="page-end">
+      <header class="page-header">
+        <h2>休息结束</h2>
+      </header>
+
+      <div class="end-crab" id="endCrab"></div>
+      <h2 class="end-title" id="endTitle">充能完成！</h2>
+      <p class="end-tip" id="endTip"></p>
+      <p class="exp-tip" id="expTip"></p>
+
+      <div class="free-card" id="endCard">
+        <div class="card-stamp">知蟹<br>专用章</div>
+        <div class="card-head">
+          <span>休息免责卡</span>
+          <span id="cardDate"></span>
+        </div>
+        <div class="card-crab" id="cardCrab"></div>
+        <div class="card-row"><span>休息场景</span><b id="cardScene"></b></div>
+        <div class="card-row"><span>休息时长</span><b id="cardDuration"></b></div>
+        <div class="card-row"><span>完成状态</span><b id="cardStatus"></b></div>
+        <p class="card-quote" id="cardQuote"></p>
+        <p class="card-hint">点击卡片可切换治愈宣言</p>
+      </div>
+
+      <button class="btn btn-primary btn-block" data-go="scene">再休息一次</button>
+      <button class="btn btn-ghost btn-block" data-go="growth">去成长主页看看</button>
+    </section>
+
+    <!-- 5. 成长主页（等级 + 经验 + 形象图鉴） -->
+    <section class="page" id="page-growth">
+      <header class="page-header">
+        <button class="icon-back" id="growthBack" aria-label="返回">‹</button>
+        <h2>蟹蟹成长主页</h2>
+      </header>
+
+      <div class="growth-crab" id="growthCrab"></div>
+      <div class="growth-name" id="levelName"></div>
+      <div class="exp-bar"><div class="exp-fill" id="expFill"></div></div>
+      <p class="exp-text" id="expText"></p>
+
+      <h3 class="block-title">形象图鉴</h3>
+      <div class="stage-list" id="stageList"><!-- JS 渲染 --></div>
+    </section>
+
+    <!-- 计时结束提醒弹窗 -->
+    <div class="modal-mask" id="timeUpModal">
+      <div class="modal">
+        <div class="modal-icon" id="modalCrab"></div>
+        <h3>叮——休息时间到！</h3>
+        <p>番茄蛋仔蟹提醒你：休息结束啦，可以继续出发了。</p>
+        <button class="btn btn-primary btn-block" id="timeUpConfirm">查看我的免责卡</button>
+      </div>
+    </div>
+
+    <!-- 升级弹窗 -->
+    <div class="modal-mask" id="levelModal">
+      <div class="modal">
+        <div class="modal-icon" id="levelModalCrab"></div>
+        <h3>蟹蟹升级啦！</h3>
+        <p id="levelModalText"></p>
+        <button class="btn btn-primary btn-block" id="levelConfirm">太棒了</button>
+      </div>
+    </div>
+
+    <!-- 轻提示 -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script src="index.js"></script>
+</body>
+</html>
