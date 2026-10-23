@@ -6,8 +6,17 @@
   'use strict';
 
   /* ---------- 常量配置 ---------- */
-  var STORE_KEY = 'zhixie_exp_v1';   // 成长值（经验）本地存储
-  var RING_LEN = 653.45;             // 2π × 104（环形进度条周长）
+  var STORE_KEY = 'zhixie_exp_v1';       // 成长值（经验）本地存储
+  var STORE_KEY_HIST = 'zhixie_history_v1'; // 休息历史
+  var RING_LEN = 653.45;                 // 2π × 104（环形进度条周长）
+
+  // 情绪映射（emoji + 显示标签）
+  var MOOD_MAP = {
+    recover: { emoji: '💤', label: '恢复中' },
+    relax:   { emoji: '🪁', label: '放松感上升' },
+    focus:   { emoji: '🎯', label: '专注了' },
+    reset:   { emoji: '🔄', label: '重置了' }
+  };
 
   var SCENES = [
     { id: 'class',  icon: '📚', name: '课后间隙', desc: '上完课，喘口气' },
@@ -169,12 +178,30 @@
       '</svg>';
   }
 
-  /* ---------- 本地存储：成长值 ---------- */
+  /* ---------- 本地存储：成长值 + 休息历史 ---------- */
   function getExp() {
     var v = parseInt(localStorage.getItem(STORE_KEY), 10);
     return isNaN(v) ? 0 : v;
   }
   function setExp(v) { localStorage.setItem(STORE_KEY, String(v)); }
+
+  function getHistory() {
+    try {
+      var raw = localStorage.getItem(STORE_KEY_HIST);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+  function setHistory(list) {
+    localStorage.setItem(STORE_KEY_HIST, JSON.stringify(list.slice(-200)));
+  }
+  // YYYY-MM-DD
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function dateStrOf(date) {
+    return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+  }
 
   function stageIndexOf(exp) {
     var idx = 0;
@@ -202,6 +229,7 @@
     currentPage = id;
     window.scrollTo(0, 0);
     if (id === 'growth') renderGrowth();
+    if (id === 'review') renderReview();
   }
 
   document.addEventListener('click', function (e) {
@@ -340,6 +368,17 @@
       var exp = getExp() + gained;
       setExp(exp);
       newIdx = stageIndexOf(exp);
+
+      // 写入休息历史（mood 先留空，等用户在结束页选择后再回填）
+      var history = getHistory();
+      history.push({
+        date: todayStr(),
+        scene: state.scene.id,
+        sceneName: state.scene.name,
+        minutes: restedMin,
+        mood: null
+      });
+      setHistory(history);
     }
 
     var curStage = newIdx + 1;
@@ -446,6 +485,166 @@
         '<span class="stage-state">需 ' + st.min + ' 成长值</span></div>';
     }).join('');
   }
+
+  /* =========================================================
+   * 休息回顾页
+   * ========================================================= */
+  function renderReview() {
+    var all = getHistory();
+    var now = new Date();
+    // 过去 7 天（含今天）的日期字符串
+    var last7Days = [];
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(now);
+      d.setDate(d.getDate() - i);
+      last7Days.push(dateStrOf(d));
+    }
+
+    // 柱状图数据：每天总分钟数
+    var dayTotals = {};
+    var dayCount = {};
+    last7Days.forEach(function (ds) { dayTotals[ds] = 0; dayCount[ds] = 0; });
+    all.forEach(function (rec) {
+      if (dayTotals.hasOwnProperty(rec.date)) {
+        dayTotals[rec.date] += rec.minutes;
+        dayCount[rec.date] += 1;
+      }
+    });
+
+    // 最大分钟数（用于柱状图高度比例）
+    var maxMin = 5; // 最小值保底，避免全 0 时除 0
+    last7Days.forEach(function (ds) { if (dayTotals[ds] > maxMin) maxMin = dayTotals[ds]; });
+
+    // 渲染柱状图
+    var chart = document.getElementById('barChart');
+    var dayLabels = ['一', '二', '三', '四', '五', '六', '日'];
+    var chartHTML = '';
+    last7Days.forEach(function (ds, idx) {
+      var mins = dayTotals[ds] || 0;
+      var h = Math.max(4, Math.round((mins / maxMin) * 100));
+      var isToday = ds === dateStrOf(now);
+      chartHTML += '<div class="bar-item">' +
+        '<div class="bar-fill' + (mins === 0 ? ' empty' : '') + '" style="height:' + h + '%"></div>' +
+        '<div class="bar-day">' + (isToday ? '今' : dayLabels[idx]) + '</div>' +
+        '</div>';
+    });
+    chart.innerHTML = chartHTML;
+
+    // 本周统计
+    var weekMin = 0, weekCount = 0;
+    last7Days.forEach(function (ds) {
+      weekMin += dayTotals[ds];
+      weekCount += dayCount[ds];
+    });
+    var weekAvg = weekCount > 0 ? (weekMin / weekCount).toFixed(1) : '0';
+    document.getElementById('statTotal').textContent = weekMin;
+    document.getElementById('statAvg').textContent = weekAvg;
+
+    // 连续天数：从今天往前数有休息的连续天数
+    var streak = 0;
+    for (var si = 0; si < 365; si++) {
+      var sd = new Date(now);
+      sd.setDate(sd.getDate() - si);
+      var sds = dateStrOf(sd);
+      if (dayTotals.hasOwnProperty(sds)) {
+        if (dayTotals[sds] > 0) streak++;
+        else break;
+      } else {
+        // 超出 7 天范围后也要查全量 history
+        var found = false;
+        for (var fi = 0; fi < all.length; fi++) {
+          if (all[fi].date === sds && all[fi].minutes > 0) { found = true; break; }
+        }
+        if (found) streak++; else break;
+      }
+    }
+    document.getElementById('statStreak').textContent = streak;
+
+    // 情绪汇总（最近 10 条）
+    var recentMoods = all.slice(-10);
+    var moodCount = {};
+    Object.keys(MOOD_MAP).forEach(function (k) { moodCount[k] = 0; });
+    recentMoods.forEach(function (rec) { if (rec.mood && moodCount.hasOwnProperty(rec.mood)) moodCount[rec.mood]++; });
+    var moodBox = document.getElementById('moodTags');
+    var moodHTML = '';
+    var hasMood = false;
+    Object.keys(MOOD_MAP).forEach(function (k) {
+      if (moodCount[k] > 0) {
+        hasMood = true;
+        moodHTML += '<span class="mood-tag"><span class="tag-emoji">' + MOOD_MAP[k].emoji + '</span>' +
+          MOOD_MAP[k].label + '<span class="tag-count">' + moodCount[k] + '</span></span>';
+      }
+    });
+    if (!hasMood) moodHTML = '<div class="mood-empty">还没有情绪记录，下次休息后选一下吧～</div>';
+    moodBox.innerHTML = moodHTML;
+  }
+
+  /* ---------- 结束页情绪选择（回填最后一条 history） ---------- */
+  document.getElementById('moodEmojis').addEventListener('click', function (e) {
+    var btn = e.target.closest('.mood-btn');
+    if (!btn) return;
+    var mood = btn.getAttribute('data-mood');
+    document.querySelectorAll('.mood-btn').forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    // 回填最后一条完整休息记录的 mood
+    var history = getHistory();
+    for (var i = history.length - 1; i >= 0; i--) {
+      if (history[i].mood === null) {
+        history[i].mood = mood;
+        setHistory(history);
+        break;
+      }
+    }
+    showToast('已记录今日感受 ' + MOOD_MAP[mood].emoji);
+  });
+
+  /* ---------- 生成回顾卡弹窗 ---------- */
+  document.getElementById('genReviewCard').addEventListener('click', function () {
+    var all = getHistory();
+    var now = new Date();
+    var last7Days = [];
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(now);
+      d.setDate(d.getDate() - i);
+      last7Days.push(dateStrOf(d));
+    }
+    var weekMin = 0, weekCount = 0;
+    last7Days.forEach(function (ds) {
+      all.forEach(function (rec) {
+        if (rec.date === ds) { weekMin += rec.minutes; weekCount++; }
+      });
+    });
+    var weekAvg = weekCount > 0 ? (weekMin / weekCount).toFixed(1) : '0';
+
+    // 连续天数
+    var streak = 0;
+    for (var si = 0; si < 365; si++) {
+      var sd = new Date(now);
+      sd.setDate(sd.getDate() - si);
+      var sds = dateStrOf(sd);
+      var found = false;
+      for (var fi = 0; fi < all.length; fi++) {
+        if (all[fi].date === sds && all[fi].minutes > 0) { found = true; break; }
+      }
+      if (found) streak++; else break;
+    }
+
+    var startLabel = last7Days[0].slice(5).replace('-', '/');
+    var endLabel = last7Days[6].slice(5).replace('-', '/');
+    document.getElementById('reviewCardPreview').innerHTML =
+      '<div class="review-title">本周休息回顾 🍅</div>' +
+      '<div class="review-week">' + startLabel + ' — ' + endLabel + '</div>' +
+      '<div class="review-nums">' +
+        '<div class="review-num-item"><div class="review-num">' + weekMin + '</div><div class="review-label">分钟</div></div>' +
+        '<div class="review-num-item"><div class="review-num">' + weekAvg + '</div><div class="review-label">平均/次</div></div>' +
+        '<div class="review-num-item"><div class="review-num">' + streak + '</div><div class="review-label">连续天</div></div>' +
+      '</div>' +
+      '<div class="review-bottom">番茄蛋仔蟹说：理直气壮地休息，就是认真生活 🌿</div>';
+    document.getElementById('reviewCardModal').classList.add('show');
+  });
+  document.getElementById('closeReviewCard').addEventListener('click', function () {
+    document.getElementById('reviewCardModal').classList.remove('show');
+  });
 
   /* ---------- Toast ---------- */
   var toastTimer = null;

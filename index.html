@@ -106,8 +106,20 @@
         <p class="card-hint">点击卡片可切换治愈宣言</p>
       </div>
 
+      <!-- 情绪选择（休息结束后记录） -->
+      <div class="mood-pick" id="moodPick">
+        <p class="mood-pick-title">今天休息后感觉如何？</p>
+        <div class="mood-emojis" id="moodEmojis">
+          <button class="mood-btn" data-mood="recover" aria-label="恢复中">💤</button>
+          <button class="mood-btn" data-mood="relax" aria-label="放松感上升">🪁</button>
+          <button class="mood-btn" data-mood="focus" aria-label="专注了">🎯</button>
+          <button class="mood-btn" data-mood="reset" aria-label="重置了">🔄</button>
+        </div>
+      </div>
+
       <button class="btn btn-primary btn-block" data-go="scene">再休息一次</button>
       <button class="btn btn-ghost btn-block" data-go="growth">去成长主页看看</button>
+      <button class="link-btn" data-go="review">📊 查看休息回顾</button>
     </section>
 
     <!-- 5. 成长主页（等级 + 经验 + 形象图鉴） -->
@@ -124,6 +136,58 @@
 
       <h3 class="block-title">形象图鉴</h3>
       <div class="stage-list" id="stageList"><!-- JS 渲染 --></div>
+
+      <button class="btn btn-ghost btn-block" data-go="review" style="margin-top:20px">📊 查看休息回顾</button>
+    </section>
+
+    <!-- 6. 休息回顾页（柱状图 + 统计 + 情绪 + 回顾卡） -->
+    <section class="page" id="page-review">
+      <header class="page-header">
+        <button class="icon-back" data-go="growth" aria-label="返回">‹</button>
+        <h2>休息回顾</h2>
+      </header>
+      <p class="review-sub">看见自己的恢复节奏</p>
+
+      <!-- 本周休息柱状图 -->
+      <div class="review-card">
+        <h3 class="review-card-title">本周休息</h3>
+        <div class="bar-chart" id="barChart"><!-- JS 渲染 --></div>
+      </div>
+
+      <!-- 三个统计卡片 -->
+      <div class="stat-row">
+        <div class="stat-card">
+          <span class="stat-label">本周休息</span>
+          <span class="stat-num" id="statTotal">0</span>
+          <span class="stat-unit">分钟</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">平均每次</span>
+          <span class="stat-num" id="statAvg">0</span>
+          <span class="stat-unit">分钟</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">连续休息</span>
+          <span class="stat-num" id="statStreak">0</span>
+          <span class="stat-unit">天</span>
+        </div>
+      </div>
+
+      <!-- 情绪板块 -->
+      <div class="mood-card">
+        <h3 class="review-card-title">情绪</h3>
+        <div class="mood-tags" id="moodTags"><!-- JS 渲染 --></div>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="genReviewCard">生成回顾卡</button>
+
+      <!-- 回顾卡弹窗 -->
+      <div class="modal-mask" id="reviewCardModal">
+        <div class="modal" style="padding:22px 16px 20px">
+          <div class="review-card-preview" id="reviewCardPreview"><!-- JS 渲染 --></div>
+          <button class="btn btn-primary btn-block" id="closeReviewCard">关闭</button>
+        </div>
+      </div>
     </section>
 
     <!-- 计时结束提醒弹窗 -->

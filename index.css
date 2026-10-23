@@ -405,6 +405,205 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 
 .crab { display: block; width: 100%; height: auto; }
 
+/* ===== 休息回顾页 ===== */
+.review-sub {
+  font-size: 14px;
+  color: var(--sub);
+  margin-top: 4px;
+  padding-bottom: 14px;
+}
+.review-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px 16px 16px;
+  box-shadow: 0 2px 8px rgba(232,84,62,.08);
+}
+.review-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+/* 柱状图 */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 130px;
+  padding: 0 4px;
+}
+.bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+.bar-fill {
+  width: 60%;
+  max-width: 26px;
+  background: linear-gradient(180deg, var(--red) 0%, var(--red-deep) 100%);
+  border-radius: 6px 6px 0 0;
+  min-height: 4px;
+  transition: height .3s;
+}
+.bar-fill.empty {
+  background: #F3E2D6;
+}
+.bar-day {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--sub);
+}
+
+/* 三个统计卡 */
+.stat-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.stat-card {
+  flex: 1;
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px 10px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(232,84,62,.06);
+}
+.stat-label {
+  display: block;
+  font-size: 11px;
+  color: var(--sub);
+  margin-bottom: 6px;
+}
+.stat-num {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--red);
+  line-height: 1;
+}
+.stat-unit {
+  font-size: 11px;
+  color: var(--sub);
+  margin-left: 2px;
+}
+
+/* 情绪板块（回顾页） */
+.mood-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px 16px;
+  margin-top: 14px;
+  box-shadow: 0 2px 8px rgba(232,84,62,.06);
+}
+.mood-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.mood-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--cream);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.mood-tag .tag-emoji { font-size: 16px; }
+.mood-tag .tag-count {
+  margin-left: 4px;
+  font-size: 11px;
+  color: var(--red-deep);
+  background: #fff;
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.mood-empty {
+  font-size: 13px;
+  color: var(--sub);
+  text-align: center;
+  padding: 10px 0;
+}
+
+/* 结束页情绪选择 */
+.mood-pick {
+  background: var(--cream);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 18px;
+}
+.mood-pick-title {
+  font-size: 13px;
+  color: #6B4A40;
+  margin-bottom: 10px;
+  text-align: center;
+}
+.mood-emojis {
+  display: flex;
+  justify-content: space-around;
+}
+.mood-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  font-size: 24px;
+  background: #fff;
+  border: 2px solid transparent;
+  transition: transform .15s, border-color .15s;
+}
+.mood-btn.active {
+  border-color: var(--red);
+  transform: scale(1.1);
+}
+
+/* 回顾卡预览弹窗 */
+.review-card-preview {
+  background: #FFF8F2;
+  border: 2px solid var(--red);
+  border-radius: 16px;
+  padding: 20px 16px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.review-card-preview .review-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--red);
+  margin-bottom: 4px;
+}
+.review-card-preview .review-week {
+  font-size: 12px;
+  color: var(--sub);
+}
+.review-card-preview .review-nums {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin: 16px 0;
+}
+.review-card-preview .review-num-item {
+  text-align: center;
+}
+.review-card-preview .review-num {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--red);
+}
+.review-card-preview .review-label {
+  font-size: 11px;
+  color: var(--sub);
+}
+.review-card-preview .review-bottom {
+  font-size: 12px;
+  color: var(--red-deep);
+  border-top: 1px dashed var(--line);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
 @media (min-width: 431px) {
   .phone { min-height: 100vh; box-shadow: 0 0 18px rgba(0,0,0,.08); }
 }
