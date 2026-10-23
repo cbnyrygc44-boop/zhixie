@@ -60,6 +60,11 @@
     extended: false
   };
 
+  /* ---------- 音乐 + 呼吸引导状态 ---------- */
+  var musicOn = false, breathOn = false;
+  var audioCtx = null, audioNodes = null; // { osc1, osc2, filter, lfoOsc, lfoGain, masterGain }
+  var breathTimer = null;
+
   /* =========================================================
    * 番茄蛋仔蟹 SVG 生成器
    * stage: 1~4 成长阶段；mood: idle / wave / sleep / celebrate
@@ -222,6 +227,11 @@
   var currentPage = 'guide';
 
   function showPage(id) {
+    // 离开计时器页时自动清理音乐 + 呼吸引导（避免跨页持续）
+    if (currentPage === 'timer' && id !== 'timer') {
+      if (musicOn) stopAmbient();
+      if (breathOn) stopBreath();
+    }
     if (id !== currentPage) prevPage = currentPage;
     var pages = document.querySelectorAll('.page');
     for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
@@ -284,6 +294,129 @@
     state.cardOn = !state.cardOn;
     cardSwitch.classList.toggle('on', state.cardOn);
     cardSwitch.setAttribute('aria-checked', String(state.cardOn));
+  });
+
+  /* =========================================================
+   * 纯音乐（Web Audio API 合成，零依赖零文件）
+   * 低频 drone + 高八度叠音 + 低通滤波 + LFO 呼吸调制
+   * ========================================================= */
+  function startAmbient() {
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) { showToast('当前浏览器不支持音频'); return; }
+      audioCtx = new Ctx();
+
+      // 主振荡器 A2 = 110Hz，温暖低频
+      var osc1 = audioCtx.createOscillator();
+      osc1.type = 'sine';
+      osc1.frequency.value = 110;
+      osc1.detune.value = 3; // 轻微失谐让声音不死板
+
+      // 高八度叠音 A3 = 220Hz，音量很小增加层次感
+      var osc2 = audioCtx.createOscillator();
+      osc2.type = 'sine';
+      osc2.frequency.value = 220;
+      osc2.detune.value = -2;
+      var osc2Gain = audioCtx.createGain();
+      osc2Gain.gain.value = 0.03;
+
+      // 低通滤波：800Hz 截止，营造室内温暖感
+      var filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 800;
+      filter.Q.value = 1.2;
+
+      // LFO 呼吸调制：0.15Hz ≈ 7 秒一个周期，调制主振荡器音量
+      var lfoOsc = audioCtx.createOscillator();
+      lfoOsc.type = 'sine';
+      lfoOsc.frequency.value = 0.15;
+      var lfoGain = audioCtx.createGain();
+      lfoGain.gain.value = 0.04; // 调制深度
+
+      // 主音量（软淡入）
+      var masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0;
+
+      // 连线：osc1 → 直接进 filter；osc2 → osc2Gain → filter
+      // filter → masterGain → destination
+      // lfoOsc → lfoGain → masterGain.gain（调制）
+      osc1.connect(filter);
+      osc2.connect(osc2Gain).connect(filter);
+      osc1.connect(filter);
+      osc2Gain.connect(filter);
+      osc2Gain.gain.value = 0.03; // 保持低音量叠加
+      filter.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+
+      lfoOsc.connect(lfoGain);
+      lfoGain.connect(masterGain.gain);
+
+      osc1.start();
+      osc2.start();
+      lfoOsc.start();
+
+      // 主音量淡入到 0.12
+      masterGain.gain.linearRampToValueAtTime(0.12, audioCtx.currentTime + 1.2);
+
+      audioNodes = { osc1: osc1, osc2: osc2, filter: filter, lfoOsc: lfoOsc, lfoGain: lfoGain, masterGain: masterGain };
+      musicOn = true;
+      document.getElementById('musicToggle').classList.add('on');
+    } catch (e) {
+      showToast('音乐启动失败：' + e.message);
+    }
+  }
+
+  function stopAmbient() {
+    if (audioNodes) {
+      try {
+        // 先淡出再停止，避免爆音
+        var ctx = audioCtx;
+        audioNodes.masterGain.gain.cancelScheduledValues(ctx.currentTime);
+        audioNodes.masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.4);
+        var nodes = audioNodes;
+        setTimeout(function () {
+          try { nodes.osc1.stop(); nodes.osc2.stop(); nodes.lfoOsc.stop(); } catch (e) {}
+          try { ctx.close(); } catch (e) {}
+        }, 500);
+      } catch (e) {}
+      audioNodes = null;
+    }
+    audioCtx = null;
+    musicOn = false;
+    document.getElementById('musicToggle').classList.remove('on');
+  }
+
+  document.getElementById('musicToggle').addEventListener('click', function () {
+    if (musicOn) stopAmbient(); else startAmbient();
+  });
+
+  /* =========================================================
+   * 呼吸引导（4-4-4-4 方框呼吸法）
+   * CSS 动画驱动圆圈缩放，JS 每 4 秒切换提示文字
+   * ========================================================= */
+  var BREATH_PHASES = ['吸气 4 秒', '屏息 4 秒', '呼气 4 秒', '屏息 4 秒'];
+  function startBreath() {
+    var guide = document.getElementById('breathGuide');
+    var textEl = document.getElementById('breathText');
+    guide.classList.remove('hide');
+    textEl.textContent = BREATH_PHASES[0];
+    var idx = 0;
+    breathTimer = setInterval(function () {
+      idx = (idx + 1) % 4;
+      textEl.textContent = BREATH_PHASES[idx];
+    }, 4000);
+    breathOn = true;
+    document.getElementById('breathToggle').classList.add('on');
+  }
+  function stopBreath() {
+    var guide = document.getElementById('breathGuide');
+    if (breathTimer) { clearInterval(breathTimer); breathTimer = null; }
+    guide.classList.add('hide');
+    breathOn = false;
+    document.getElementById('breathToggle').classList.remove('on');
+  }
+  document.getElementById('breathToggle').addEventListener('click', function () {
+    if (breathOn) stopBreath(); else startBreath();
   });
 
   /* =========================================================

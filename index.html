@@ -57,11 +57,20 @@
     <section class="page" id="page-timer">
       <header class="page-header">
         <h2 id="timerSceneTitle">休息中</h2>
+        <div class="timer-toggles">
+          <button class="mini-toggle" id="musicToggle" aria-label="纯音乐">🎵</button>
+          <button class="mini-toggle" id="breathToggle" aria-label="呼吸引导">🫁</button>
+        </div>
       </header>
 
       <div class="timer-crab" id="timerCrab"></div>
 
       <div class="ring">
+        <!-- 呼吸引导叠加层：放在最底层 -->
+        <div class="breath-guide hide" id="breathGuide">
+          <div class="breath-circle"></div>
+          <div class="breath-text" id="breathText">吸气 4 秒</div>
+        </div>
         <svg viewBox="0 0 240 240">
           <circle class="ring-bg" cx="120" cy="120" r="104"></circle>
           <circle class="ring-fg" id="ringFg" cx="120" cy="120" r="104"></circle>

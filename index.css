@@ -406,6 +406,77 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .crab { display: block; width: 100%; height: auto; }
 
 /* ===== 休息回顾页 ===== */
+
+/* ===== 计时器页：mini toggle + 呼吸引导 ===== */
+.timer-toggles {
+  position: absolute;
+  right: 0;
+  top: 0;
+  display: flex;
+  gap: 8px;
+}
+.mini-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 18px;
+  background: #fff;
+  border: 1.5px solid var(--line);
+  transition: background .2s, border-color .2s, transform .15s;
+}
+.mini-toggle.on {
+  background: var(--red);
+  border-color: var(--red);
+  transform: scale(1.05);
+}
+
+/* 呼吸引导叠加层（放在 .ring 内部最底层） */
+.breath-guide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 0;
+}
+.breath-guide.hide { display: none; }
+.breath-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(232, 84, 62, 0.25);
+  box-shadow: 0 0 32px rgba(232, 84, 62, 0.35);
+  animation: breath-scale 16s ease-in-out infinite;
+}
+@keyframes breath-scale {
+  0%   { transform: scale(0.3); opacity: 0.4; }   /* 准备 */
+  25%  { transform: scale(1.1); opacity: 1; }      /* 吸气 4s (0→25%) */
+  50%  { transform: scale(1.1); opacity: 0.85; }  /* 屏息 4s (25→50%) */
+  75%  { transform: scale(0.3); opacity: 0.5; }    /* 呼气 4s (50→75%) */
+  100% { transform: scale(0.3); opacity: 0.4; }    /* 屏息 4s (75→100%) */
+}
+.breath-text {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--red-deep);
+  font-weight: 600;
+  letter-spacing: 1px;
+  animation: breath-text-fade 16s ease-in-out infinite;
+}
+@keyframes breath-text-fade {
+  0%, 22%   { opacity: 1; }
+  23%, 27%  { opacity: 0; }
+  28%, 47%  { opacity: 1; }
+  48%, 52%  { opacity: 0; }
+  53%, 72%  { opacity: 1; }
+  73%, 77%  { opacity: 0; }
+  78%, 97%  { opacity: 1; }
+  98%, 100% { opacity: 0; }
+}
+
+/* ===== 休息回顾页 ===== */
 .review-sub {
   font-size: 14px;
   color: var(--sub);
