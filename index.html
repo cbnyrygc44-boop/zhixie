@@ -143,7 +143,7 @@
     <!-- 6. 休息回顾页（柱状图 + 统计 + 情绪 + 回顾卡） -->
     <section class="page" id="page-review">
       <header class="page-header">
-        <button class="icon-back" data-go="growth" aria-label="返回">‹</button>
+        <button class="icon-back" id="reviewBack" aria-label="返回">‹</button>
         <h2>休息回顾</h2>
       </header>
       <p class="review-sub">看见自己的恢复节奏</p>
@@ -180,6 +180,7 @@
       </div>
 
       <button class="btn btn-primary btn-block" id="genReviewCard">生成回顾卡</button>
+      <button class="link-btn" data-go="guide">🏠 返回主页</button>
 
       <!-- 回顾卡弹窗 -->
       <div class="modal-mask" id="reviewCardModal">

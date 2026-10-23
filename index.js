@@ -239,6 +239,12 @@
   document.getElementById('growthBack').addEventListener('click', function () {
     showPage(prevPage === 'growth' ? 'scene' : prevPage);
   });
+  document.getElementById('reviewBack').addEventListener('click', function () {
+    // 优先回到来源页；若来源就是 review 本身、guide、或不明确，则回 guide
+    var target = prevPage;
+    if (!target || target === 'review' || target === 'guide') target = 'guide';
+    showPage(target);
+  });
 
   /* =========================================================
    * 场景选择页
